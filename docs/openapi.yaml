@@ -804,7 +804,7 @@ paths:
                   cnt:
                     type: int
                     description: The number of reports included in this push (no more than 50 more than one request)
-                  array:
+                  smsArray:
                     type: array
                     items:
                       type: object
@@ -1039,6 +1039,10 @@ paths:
                 {"account":"chenkc","password":"123456","job":"job_with_number","numbersrc":0,"numbers":"123456,3444,54535","content":"test"}
               schema:
                 type: object
+                required: 
+                  - account
+                  - password
+                  - job
                 properties:
                   version:
                     type: string
