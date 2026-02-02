@@ -35,7 +35,7 @@ info:
     backgroundColor: '#FAFAFA'
     altText: SMS logo
 paths:
-  http://ip:20003/submit_sms_tasks:
+  http://ip:20003/getbalance:
     get:
       summary: Get balance
       deprecated: false
@@ -284,27 +284,6 @@ paths:
          After successfully submitting the SMS, the system will generate an ID for the successful number. Customers can later use this ID to check the delivery status of the message.
       requestBody:
         content:
-          multipart/form-data:
-            example:
-              mms_body:
-                account: test
-                password: 123456
-                smsarray:
-                  - numbers: 10086
-                    content: MMScontent
-                version: 1.0
-                time: 1751818683402
-              formdata_name: filename.extension
-            schema:
-              type: object
-              properties:
-                mms_body:
-                  type: array
-                  description: When submitting MMS via POST, `mmsbody` must be the first element in the form. The content format remains consistent with the SMS submission method described above, using JSON format and presented as an array named `smsarray` within the `mms_body` form
-                mms_attachments:
-                  description: Subsequent form fields represent MMS attachments. Attachment names should be simple, without directory paths—use only the format  `filename.extension`
-                  type: string
-                  format: binary
           application/json:
             schema:
               type: object
@@ -384,6 +363,158 @@ paths:
                   numbers: 12345
                   sender: ""
                   
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - success
+                  - fail
+                  - array
+                properties:
+                   status:
+                     type: int
+                     description: >-
+                       Send submission status
+                        - 0:query success
+                        - 1:authentication error
+                        - 2:Ip limited access
+                        - 3:SMS contain sensitive characters
+                        - 4:SMS contain is empty
+                        - 5:SMS contain is too long
+                        - 6:Not a template SMS
+                        - 7:Over number
+                        - 8:number is empty
+                        - 9:Abnormal number
+                        - 10:The channel balance is insufficient to satisfy this transmission
+                        - 11:The time is wrong
+                        - 12:Because of the platform, batch commit error,please contact the administrator
+                        - 13:User locked
+                   success:
+                     type: int
+                     description: The number of successful submissions
+                   fail:
+                     type: int
+                     description: The number of failure submissionss
+                   billcnt:
+                     type: int
+                     description: The number of billing statements successfully submitted
+                   array:
+                     type: array
+                     description: >-
+                       The array of successful sms submission
+                       
+                       
+                       The array contains the “number and number of the sending result query ID”,which is numeric characters
+                       
+                       
+                       The array field may include billing debug information only if the configuration parameter EIMS_HTTP_GET_BILL_CNT is set to 1. By default, this feature is disabled.
+              examples:
+                '1':
+                  summary: Successful instance
+                  value:
+                    status: 0
+                    success: 2
+                    billcnt: 2
+                    array:
+                      - - 1008611
+                        - 1
+                      - - 10010
+                        - 2
+          headers: {}
+      security: []
+  http://ip:20003/sendmms:
+    post:
+      summary: Send MMS
+      deprecated: false
+      description: >-
+         Submit using multiple forms. The first form is named `mms_body`. Its content format matches the SMS submission format above. Place the JSON content in the first form named `mms_body`, using the `smsarray` array format. Parameters follow the `sendsms` format described above
+         
+         
+         Subsequent forms contain MMS attachments. Attachment filenames should omit directories and follow the simple format ‘name.extension’. The reply format mirrors the sendSMS reply format
+      requestBody:
+        content:
+          multipart/form-data:
+            example:
+              mms_body:
+                account: test
+                password: 123456
+                smsarray:
+                  - numbers: 10086
+                    content: MMScontent
+                version: 1.0
+                time: 1751818683402
+              formdata_name: filename.extension
+            schema:
+              type: object
+              properties:
+                mms_body:
+                  type: array
+                  description: >-
+                    `mmsbody` must be the first element in the form. The content format remains consistent with the SMS submission method described above, using JSON format and presented as an array named `smsarray` within the `mms_body` form
+                  items:
+                    type: object
+                    required:
+                      - account
+                      - password
+                      - smsarray
+                    properties:
+                      account:
+                        type: string
+                        description: Account
+                      password: 
+                        type: string
+                        description: >-
+                           When the server is not encrypted,is plaintext password.When the server is encrypted, is MD5 password
+                           
+                           
+                           Md5 price = md5(account+plaintext password+seq+time+key）
+                           The negotiated key offer By server
+                      seq: 
+                        type: int
+                        description: >-
+                          Serial number: incrementing per request. The initial value is 1
+                          
+                          
+                           **Must be filled when the server requires encryption**
+                      time:
+                        type: int
+                        description: >-
+                          The timestamp of the request initiation
+                          
+                          
+                          **Must be filled when the server requires encryption**
+                      smsarray:
+                        type: array
+                        description: For details, please refer to the sendsms
+                        items:
+                          type: object
+                          required:
+                            - numbers
+                            - content
+                          properties:
+                            mmstitle:
+                              type: string
+                            sender:
+                              type: string
+                            numbers: 
+                              type: string
+                            content:
+                              type: string
+                            sendtime:
+                              type: string(14)
+                      version:
+                        type: string
+                        description: Protocal version number
+                        default: 1.0
+                mms_attachments:
+                  description: Subsequent form fields represent MMS attachments. Attachment names should be simple, without directory paths—use only the format  `filename.extension`
+                  type: string
+                  format: binary              
       responses:
         '200':
           description: 'OK'
@@ -843,7 +974,7 @@ paths:
                 '1':
                   summary: Push sample
                   value: 
-                    type: recvsms
+                    type: recvmms
                     ver: V2.0
                     cnt: 1
                     smsArray:
