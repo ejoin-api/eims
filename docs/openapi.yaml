@@ -16,19 +16,29 @@ info:
      This API is based on the HTTP protocol, supports GET and POST requests, and handles multi-tasking and status updates via JSON arrays.
 
 
-     The HTTP message body consists of one or more JSON-formatted strings. The HTTP header parameter “Content-Type” must be set to “application/json;charset=utf-8”.
+     The HTTP message body consists of one or more JSON-formatted strings. 
+     
+     
+     **The HTTP header parameter “Content-Type” must be set to “application/json;charset=utf-8”.**
 
 
      # Getting Started
 
      Two key parameters are required for device communication:
 
-     **IP**: The public network address of the EIMS server
+     **IP: The public network address of the EIMS server**
 
-     The default port for the EIMS HTTP API is **20003**
+     **The default port for the EIMS HTTP API is 20003**
+     
+     <span style="text-decoration: underline;font-weight: bold;font-style: italic;color: red">Note: The `Password` parameter in the EIMS API has two scenarios:
+     - 1. When the server does not encrypt, it is a plaintext password.
+     - 2. When the server encrypts, it is an MD5-hashed password.</span>
+     
+     
+     <span style="text-decoration: underline;font-weight: bold;font-style: italic;color: red">The MD5 value is calculated as: md5(username + plaintext password + seq + time + negotiated key).
+     The negotiated key is provided by the server.</span>
 
      When calling the API, the complete request URL must include the values for these parameters.
-
   version: 3.8.0
   x-logo:
     url: ./EAPI-logo.png
@@ -44,9 +54,9 @@ paths:
         - name: version
           in: query
           description: Protocol version number
-          default: 1.0
           schema:
             type: string
+            default: '1.0'
         - name: account
           in: query
           description: Account
@@ -126,9 +136,10 @@ paths:
         - name: version
           in: query
           description: Protocol version number
-          default: 1.0
+          
           schema:
             type: string
+            default: '1.0'
         - name: account
           in: query
           description: Account
@@ -164,9 +175,9 @@ paths:
             Sms type
              - 0: SMS
              - 1: MMS
-          default: 0
           schema:
             type: int
+            default: 0
         - name: mmstitle
           in: query
           description: MMS Title **(URL-encoded for GET requests)**
@@ -294,7 +305,7 @@ paths:
                 version:
                   type: string
                   description: Protocol version number
-                  default: 1.0
+                  default: '1.0'
                 account:
                   type: string
                   description: Account
@@ -317,8 +328,9 @@ paths:
                       **Must be filled when the server requires encryption**
                 smstype:
                   type: int
+                  default: 0
                   description: >-
-                     Sms type
+                     Sms type:
                       - 0: SMS
                       - 1: MMS
                 mmstitle:
@@ -349,6 +361,37 @@ paths:
                 smsarray:
                   type: array
                   description: An array providing multiple numbers and multiple contents at once
+                  items: 
+                    required:
+                      - content
+                      - numbers
+                    properties:
+                      smstype:
+                        type: int
+                        default: 0
+                        description: >-
+                          Sms type:
+                           - 0:SMS
+                           - 1:MMS
+                      mmstitle:
+                        type: string
+                        description: MMS Title **(URL-encoded for GET requests)**
+                      sender:
+                        type: string
+                        description: Sender
+                      numbers:
+                        type: string
+                        description: SMS receiving number,**separated by English comma between multiple Numbers**
+                      content: 
+                        type: string
+                        description: >-
+                          Send content **(URL-encoded for GET requests)**
+                          
+                          
+                          <span style="color: red;font-weight: bold">The length should not exceed 1024</span>
+                      sendtime:
+                        type: string(14)
+                        description: Timed delivery time **(empty is immediately sent)**
                      
             example: 
               account: chenck
@@ -431,90 +474,40 @@ paths:
     post:
       summary: Send MMS
       deprecated: false
-      description: >-
+      description: |
          Submit using multiple forms. The first form is named `mms_body`. Its content format matches the SMS submission format above. Place the JSON content in the first form named `mms_body`, using the `smsarray` array format. Parameters follow the `sendsms` format described above
          
          
          Subsequent forms contain MMS attachments. Attachment filenames should omit directories and follow the simple format ‘name.extension’. The reply format mirrors the sendSMS reply format
+      
+         ![sendmms](/sendmms.png)
+              
       requestBody:
         content:
           multipart/form-data:
             example:
-              mms_body:
-                account: test
-                password: 123456
-                smsarray:
-                  - numbers: 10086
-                    content: MMScontent
-                version: 1.0
-                time: 1751818683402
-              formdata_name: filename.extension
+              {"account":"test", "password":"123456", "smsarray":[{"numbers":"10001", "content":"hello"}], "version":"1.0", "time":1751818683402}
             schema:
               type: object
               properties:
                 mms_body:
-                  type: array
-                  description: >-
-                    `mmsbody` must be the first element in the form. The content format remains consistent with the SMS submission method described above, using JSON format and presented as an array named `smsarray` within the `mms_body` form
-                  items:
-                    type: object
-                    required:
-                      - account
-                      - password
-                      - smsarray
-                    properties:
-                      account:
-                        type: string
-                        description: Account
-                      password: 
-                        type: string
-                        description: >-
-                           When the server is not encrypted,is plaintext password.When the server is encrypted, is MD5 password
-                           
-                           
-                           Md5 price = md5(account+plaintext password+seq+time+key）
-                           The negotiated key offer By server
-                      seq: 
-                        type: int
-                        description: >-
-                          Serial number: incrementing per request. The initial value is 1
-                          
-                          
-                           **Must be filled when the server requires encryption**
-                      time:
-                        type: int
-                        description: >-
-                          The timestamp of the request initiation
-                          
-                          
-                          **Must be filled when the server requires encryption**
-                      smsarray:
-                        type: array
-                        description: For details, please refer to the sendsms
-                        items:
-                          type: object
-                          required:
-                            - numbers
-                            - content
-                          properties:
-                            mmstitle:
-                              type: string
-                            sender:
-                              type: string
-                            numbers: 
-                              type: string
-                            content:
-                              type: string
-                            sendtime:
-                              type: string(14)
-                      version:
-                        type: string
-                        description: Protocal version number
-                        default: 1.0
-                mms_attachments:
-                  description: Subsequent form fields represent MMS attachments. Attachment names should be simple, without directory paths—use only the format  `filename.extension`
                   type: string
-                  format: binary              
+                  description: >-
+                    `mmsbody` must be the first element in the form. 
+                    
+                    
+                    The content format remains consistent with the SMS submission method described above, using JSON format and presented as an array named `smsarray` within the `mms_body` form:
+                      - account, string: Account
+                      - password, string: Password
+                      - seq, int: Serial number: incrementing per request. The initial value is 1. **Must be filled when the server requires encryption**
+                      - time, int: The timestamp of the request initiation. **Must be filled when the server requires encryption**
+                      - version, string: Protocal version number, default: 1.0
+                      - smsarray, array, properties: mmstitle(string), sender(string), numbers(string,**required**), content(string,**required**), sendtime(string)
+                      
+                filename.extension:
+                  description: Subsequent form fields represent MMS attachments. Attachment names should be simple, without directory paths—use only the format  `filename.extension`
+                  type: file   
+        
       responses:
         '200':
           description: 'OK'
@@ -587,14 +580,18 @@ paths:
         Supports querying SMS delivery status via HTTP GET requests. A single GET request can submit up to 200 mobile numbers
         
         
+        **Users can query the delivery result of a message using the unique ID generated by the system after successful submission.**
+        
+        
         Note:A new delivery report retrieval feature has been added. This feature can be disabled by modifying the EIMS_HTTP_GET_DELIVER_REPORT setting in the configuration file.
       parameters:
         - name: version
           in: query
           description: Protocol version number
-          default: 1.0
+          
           schema:
             type: string
+            default: '1.0'
         - name: account
           in: query
           description: Account
@@ -627,6 +624,7 @@ paths:
             type: string
         - name: ids
           in: query
+          required: true
           description: >-
              Specify the SMS id of the query sending result **(the id is returned by the system at the time of submission)**, and multiple Numbers are separated by English commas **(up to 200)**
           schema:
@@ -737,6 +735,106 @@ paths:
                        - [2, "1008611", 20171001123015, 0, 20171001123025, 3]
           headers: {}
       security: []
+  http://ip:20003/getsms:
+    get:
+      summary: Get SMS
+      deprecated: false
+      description: >-
+        Supports querying received SMS messages via HTTP GET requests. A single GET request can retrieve up to 50 received messages
+      parameters:
+        - name: version
+          in: query
+          description: Protocol version number
+          schema:
+            type: string
+            default: '1.0'
+        - name: account
+          in: query
+          description: Account
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: Password
+          required: true
+          schema:
+            type: string
+        - name: seq
+          in: query
+          description: >-
+            Serial number，increments per request，the initial value is 1.
+           
+           
+            **Must be filled when the server requires encryption**
+          schema:
+            type: string
+        - name: time
+          in: query
+          description: >-
+             The timestamp form which the request was mode. 
+          
+          
+              **Must be filled when the server requires encryption**
+          schema:
+            type: string
+        - name: start_time
+          in: query
+          description: >-
+             Start time stamp for the query
+          schema:
+            type: int
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              example:
+                {"status":0, "cnt":2, "array":[[1,"10010","123456",20171001123015, "5bCK5pWs55qE5a6i5oi377yM5oKo5b2T5YmN6K+d6LS55L2Z6aKdNDEuMDHlhYPvvIzlrp7ml7bor53otLkxMi4yMOWFg+OAgg=="],[2,"1008611","123456",20171001123015, "5oKo5aW9"]]}
+              schema:
+                type: object
+                required:
+                  - status
+                  - cnt
+                  - array
+                properties:
+                   status:
+                     type: int
+                     description: >-
+                        Send submission status, code and details:
+                         - 0: query success
+                         - 1: authentication error
+                         - 2: Ip limited access
+                         - 3: SMS contain sensitive characters
+                         - 4: SMS contain is empty
+                         - 5: SMS contain is too long
+                         - 6: Not a template SMS
+                         - 7: Over number
+                         - 8: number is empty
+                         - 9: Abnormal number
+                         - 10: The channel balance is insufficient to satisfy this transmission
+                         - 11: The time is wrong
+                         - 12: Because of the platform , batch commit error,please contact the administrator
+                         - 13: User locked
+                   cnt:
+                     type: int
+                     description: receive SMS number of Query (a get request is not more than 50)
+                   array:
+                     type: array
+                     description: >-
+                         Receive SMS number of Query (a get request is not more than 50)
+                         
+                         
+                         This array contains the following fields in sequence: `ID` (unique system ID), `sender number`, `recipient number`, `delivery time`, `SMS content`.
+                         
+                         
+                         Note: **SMS content requires Base64 decoding to obtain the correct UTF-8 encoded message.** 
+                         If two messages with identical IDs are received, they are treated as duplicate delivery records.  
+                         
+                         
+                         Once a customer queries a delivered message, subsequent queries will no longer return duplicate results.    
+          headers: {}
+      security: []
   http://ip:20003/get_online_numbers:
     get:
       summary: Get Online Numbers
@@ -747,9 +845,9 @@ paths:
         - name: version
           in: query
           description: Protocol version number
-          default: 1.0
           schema:
             type: string
+            default: '1.0'
         - name: account
           in: query
           description: Account
@@ -788,11 +886,13 @@ paths:
             type: int
         - name: mcc
           in: query
+          required: true
           description: Attempt to retrieve numbers with specified MCC (Mobile Country Code)
           schema:
             type: int
         - name: mnc
           in: query
+          required: true
           description: Attempt to retrieve numbers with specified MNC (Mobile Network Code)
           schema:
             type: int
@@ -845,7 +945,7 @@ paths:
       security: []
   Configuration of a sms report push URL for each consumer account:
     post:
-      summary: Actively Push Received SMS to Customer URL 
+      summary: Actively Push Received SMS to Customer URL(V2.0) 
       deprecated: false
       description: >-
         The system allows configuration of a report push URL for each consumer account. When the system receives an SMS, it will proactively push the received message to the configured URL via a POST request
@@ -870,6 +970,14 @@ paths:
                     type: array
                     items:
                       type: object
+                      required:
+                        - user
+                        - smsid
+                        - receiver
+                        - sender
+                        - recvTime
+                        - recvTimeStamp
+                        - sms
                       properties:
                         user:
                           type: string
@@ -885,7 +993,7 @@ paths:
                           description: Sender number
                         recvTime:
                           type: string
-                          description: Timestamp of SMS receptio
+                          description: Timestamp of SMS reception
                         recvTimeStamp:
                           type: int
                           description: UNIX timestamp of SMS reception
@@ -922,125 +1030,46 @@ paths:
       deprecated: false
       description: >-
         The system can be configured with a callback URL for consumers to receive delivery reports. Upon receiving an MMS, the system will actively push the received message to the consumer’s configured URL using HTTP POST
-      requestBody:
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  type:
-                    type: string
-                    const: recvmms
-                    description: The string type of the message
-                  cnt:
-                    type: int
-                    description: The number of reports included in this push (no more than 50 more than one request)
-                  smsArray:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        user:
-                          type: string
-                          description: Consumer account name
-                        smsid:
-                          type: int
-                          description: Unique SMS ID assigned by the system
-                        title:
-                          type: string
-                          description: MMS subject
-                        receiver:
-                          type: string
-                          description: Recipient number
-                        sender:
-                          type: string
-                          description: Sender number
-                        recvTime:
-                          type: string
-                          description: Timestamp of SMS receptio
-                        recvTimeStamp:
-                          type: int
-                          description: UNIX timestamp of SMS reception
-                        sms:
-                          type: string
-                          description: SMS content, encoded in Base 64
-                    description: Push detail status report
-                required:
-                  - type
-                  - cnt
-                  - ver
-                  - smsArray
-              examples:
-                '1':
-                  summary: Push sample
-                  value: 
-                    type: recvmms
-                    ver: V2.0
-                    cnt: 1
-                    smsArray:
-                      - user: test
-                        smsid: 1
-                        title: test_title
-                        sender: 12345678
-                        receiver: 87654321
-                        recvTimeStamp: 1744696196
-                        recvTime: 20250415_134956
-                        sms: dGVzdHNtcw==
-          headers: {}
-      security: []
-  Configuration of a V1.0 report push URL for each consumer account:
-    post:
-      summary: Actively the push the report to customers URL (V1.0)
-      deprecated: false
-      description: >-
-        The system allows configuration of a report push URL for each consumer account. 
-        After an SMS is sent, the system will push the sending result to the specified URL via a POST request. 
-        The report content is included in the request body in JSON format. 
-        A maximum of 50 sending reports can be pushed in a single request
         
         
-        Note: In the consumer account settings, the HTTP report version must be set to V1.0
+        **`mmsbody` must be the first element in the form**
+        ![repost](/repostmms.png)
       requestBody:
           content:
-            application/json:
+            multipart/form-data:
+              example:
+                {"type":"recvmms","ver":"V2.0","cnt":1,"smsArray":[{"user":"test","smsid":1,"title":"test_title","sender":"12345678","receiver":"87654321","recvTimeStamp":1744696196,"recvTime":"20250415_134956","sms":"dGVzdHNtcw=="}]}  
               schema:
-                type: object
+                type: object   
                 properties:
-                  type:
+                  mmsbody:
                     type: string
-                    const: report
-                    example: report
-                    description: The string type of the message
-                  cnt:
-                    type: int
-                    example: 2
-                    description: The number of reports included in this push (no more than 50 more than one request) 
-                  array:
-                    type: array
-                    example:
-                      - [1, "1234545456", 20180801123015, 0, "success"]
-                      - [2, "2356844545", 20180801223015, 1, "no balance"]
-                    items:
-                      type: array
-                      items:
-                        oneOf:
-                          - type: integer   
-                          - type: string    
-                    description: >- 
-                       An array of sms sending reports
-                        The array contains: 
-                         - id(the id returned when sent，Int)
-                         - Send number（String）
-                         - Send time（Int）
-                         - Send result（Int，0 succeed，non-0 failed）
-                         - Cause（String）
-                required:
-                  - type
-                  - cnt
-                  - array
+                    description: >-
+                      JSON message format:
+                        - type: string, the string type of the message, default：“recvmms”
+                        - cnt: int, the number of reports included in this push (no more than 50 more than one request)
+                        - ver: string, report version, defaul: "V2.0"
+                        - smsArray: array, 
+                           The array contains: 
+                            - 1.user(Consumer account name, string)
+                            - 2.Smsid(Unique SMS ID assigned by the system, int)
+                            - 3.Title(MMS subject)
+                            - 4.Receiver(Recipient number, string)
+                            - 5.Sender(Sender number, string)
+                            - 6.recvTime(Timestamp of SMS reception, string)
+                            - 7.recvTimeStamp(UNIX timestamp of SMS reception, int)
+                            - 8.SMS content encoded in Base 64, string)
+                  Other form fields represent the MMS attachments:
+                    type: file
+                    description: >-
+                      <span style="font-weight: bold;color: red">Content-Disposition: form-data; filename="filename"</span>
+                      
+                      
+                      <span style="font-weight: bold;color: red">File naming format: MD5 value of file content.file extension</span>
           headers: {}
       security: []
-  Configuration of a V2.0 report push URL for each consumer account:
+     
+  Configuration of a report push URL for each consumer account:
     post:
       summary: Actively the push the report to customers URL (V2.0)
       deprecated: false
@@ -1077,6 +1106,7 @@ paths:
                     example: V2.0
                   array:
                     type: array
+                    description: An array of sms sending reports
                     example:
                       - id: 1
                         src: 0
@@ -1125,8 +1155,6 @@ paths:
                         reason:
                           type: string
                           description: The reason for the failure
-                    description: >- 
-                       An array of sms sending reports
                 required:
                   - type
                   - cnt
@@ -1174,26 +1202,20 @@ paths:
                   - account
                   - password
                   - job
+                  - content
+                  - numbers
+                  - numbersrc
                 properties:
                   version:
                     type: string
                     description: Protocol version number
-                    default: 1.0
+                    default: '1.0'
                   account:
                     type: string
                     description: Accounts
                   password:
                     type: string
-                    description: >-
-                      When the server is not encrypted,is plaintext password
-                      
-                      
-                      When the server is encrypted, is MD5 password
-                      
-                      
-                      Md5 price = md5
-                      (account+plaintext password+seq+time+key）
-                      The negotiated key offer By server
+                    description: Password
                   seq:
                     type: int
                     description: >-
