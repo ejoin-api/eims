@@ -480,7 +480,7 @@ paths:
          
          Subsequent forms contain MMS attachments. Attachment filenames should omit directories and follow the simple format ‘name.extension’. The reply format mirrors the sendSMS reply format
       
-         ![sendmms](./sendmms.png)
+         ![sendmms](https://github.com/ejoin-api/eims/blob/main/docs/sendmms.png)
               
       requestBody:
         content:
@@ -1033,7 +1033,7 @@ paths:
         
         
         **`mmsbody` must be the first element in the form**
-        ![repost](./repostmms.png)
+        ![repost](https://github.com/ejoin-api/eims/blob/main/docs/repostmms.png)
       requestBody:
           content:
             multipart/form-data:
@@ -1369,4 +1369,5 @@ paths:
                     status: 0
                     jobid: 2
           headers: {}
+
       security: []
