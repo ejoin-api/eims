@@ -735,106 +735,106 @@ paths:
                        - [2, "1008611", 20171001123015, 0, 20171001123025, 3]
           headers: {}
       security: []
-  http://ip:20003/getsms:
-    get:
-      summary: Get SMS
-      deprecated: false
-      description: >-
-        Supports querying received SMS messages via HTTP GET requests. A single GET request can retrieve up to 50 received messages
-      parameters:
-        - name: version
-          in: query
-          description: Protocol version number
-          schema:
-            type: string
-            default: '1.0'
-        - name: account
-          in: query
-          description: Account
-          required: true
-          schema:
-            type: string
-        - name: password
-          in: query
-          description: Password
-          required: true
-          schema:
-            type: string
-        - name: seq
-          in: query
-          description: >-
-            Serial number，increments per request，the initial value is 1.
+#  http://ip:20003/getsms:
+#    get:
+#      summary: Get SMS
+#      deprecated: false
+#      description: >-
+#        Supports querying received SMS messages via HTTP GET requests. A single GET request can retrieve up to 50 received messages
+#      parameters:
+#        - name: version
+#          in: query
+#          description: Protocol version number
+#          schema:
+#            type: string
+#            default: '1.0'
+#        - name: account
+#          in: query
+#          description: Account
+#          required: true
+#          schema:
+#            type: string
+#        - name: password
+#          in: query
+#          description: Password
+#          required: true
+#          schema:
+#            type: string
+#        - name: seq
+#          in: query
+#          description: >-
+#            Serial number，increments per request，the initial value is 1.
            
            
-            **Must be filled when the server requires encryption**
-          schema:
-            type: string
-        - name: time
-          in: query
-          description: >-
-             The timestamp form which the request was mode. 
+#            **Must be filled when the server requires encryption**
+#          schema:
+#            type: string
+#        - name: time
+#          in: query
+#          description: >-
+#             The timestamp form which the request was mode. 
           
           
-              **Must be filled when the server requires encryption**
-          schema:
-            type: string
-        - name: start_time
-          in: query
-          description: >-
-             Start time stamp for the query
-          schema:
-            type: int
-      responses:
-        '200':
-          description: 'OK'
-          content:
-            application/json:
-              example:
-                {"status":0, "cnt":2, "array":[[1,"10010","123456",20171001123015, "5bCK5pWs55qE5a6i5oi377yM5oKo5b2T5YmN6K+d6LS55L2Z6aKdNDEuMDHlhYPvvIzlrp7ml7bor53otLkxMi4yMOWFg+OAgg=="],[2,"1008611","123456",20171001123015, "5oKo5aW9"]]}
-              schema:
-                type: object
-                required:
-                  - status
-                  - cnt
-                  - array
-                properties:
-                   status:
-                     type: int
-                     description: >-
-                        Send submission status, code and details:
-                         - 0: query success
-                         - 1: authentication error
-                         - 2: Ip limited access
-                         - 3: SMS contain sensitive characters
-                         - 4: SMS contain is empty
-                         - 5: SMS contain is too long
-                         - 6: Not a template SMS
-                         - 7: Over number
-                         - 8: number is empty
-                         - 9: Abnormal number
-                         - 10: The channel balance is insufficient to satisfy this transmission
-                         - 11: The time is wrong
-                         - 12: Because of the platform , batch commit error,please contact the administrator
-                         - 13: User locked
-                   cnt:
-                     type: int
-                     description: receive SMS number of Query (a get request is not more than 50)
-                   array:
-                     type: array
-                     description: >-
-                         Receive SMS number of Query (a get request is not more than 50)
+#              **Must be filled when the server requires encryption**
+#          schema:
+#            type: string
+#        - name: start_time
+#          in: query
+#          description: >-
+#             Start time stamp for the query
+#          schema:
+#            type: int
+#      responses:
+#        '200':
+#          description: 'OK'
+#          content:
+#            application/json:
+#              example:
+#                {"status":0, "cnt":2, "array":[[1,"10010","123456",20171001123015, "5bCK5pWs55qE5a6i5oi377yM5oKo5b2T5YmN6K+d6LS55L2Z6aKdNDEuMDHlhYPvvIzlrp7ml7bor53otLkxMi4yMOWFg+OAgg=="],[2,"1008611","123456",20171001123015, "5oKo5aW9"]]}
+#              schema:
+#                type: object
+#                required:
+#                  - status
+#                  - cnt
+#                  - array
+#                properties:
+#                   status:
+#                     type: int
+#                     description: >-
+#                        Send submission status, code and details:
+#                         - 0: query success
+#                         - 1: authentication error
+#                         - 2: Ip limited access
+#                         - 3: SMS contain sensitive characters
+#                         - 4: SMS contain is empty
+#                         - 5: SMS contain is too long
+#                         - 6: Not a template SMS
+#                         - 7: Over number
+#                         - 8: number is empty
+#                         - 9: Abnormal number
+#                         - 10: The channel balance is insufficient to satisfy this transmission
+#                         - 11: The time is wrong
+#                         - 12: Because of the platform , batch commit error,please contact the administrator
+#                         - 13: User locked
+#                   cnt:
+#                     type: int
+#                     description: receive SMS number of Query (a get request is not more than 50)
+#                   array:
+#                     type: array
+#                     description: >-
+#                         Receive SMS number of Query (a get request is not more than 50)
                          
                          
-                         This array contains the following fields in sequence: `ID` (unique system ID), `sender number`, `recipient number`, `delivery time`, `SMS content`.
+#                         This array contains the following fields in sequence: `ID` (unique system ID), `sender number`, `recipient number`, `delivery time`, `SMS content`.
                          
                          
-                         Note: **SMS content requires Base64 decoding to obtain the correct UTF-8 encoded message.** 
-                         If two messages with identical IDs are received, they are treated as duplicate delivery records.  
+#                         Note: **SMS content requires Base64 decoding to obtain the correct UTF-8 encoded message.** 
+#                         If two messages with identical IDs are received, they are treated as duplicate delivery records.  
                          
                          
-                         Once a customer queries a delivered message, subsequent queries will no longer return duplicate results.    
-          headers: {}
-      security: []
+#                         Once a customer queries a delivered message, subsequent queries will no longer return duplicate results.    
+#          headers: {}
+#      security: []
   http://ip:20003/get_online_numbers:
     get:
       summary: Get Online Numbers
@@ -1369,6 +1369,4 @@ paths:
                     status: 0
                     jobid: 2
           headers: {}
-
       security: []
-
